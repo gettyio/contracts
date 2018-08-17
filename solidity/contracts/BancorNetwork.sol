@@ -49,7 +49,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
     }
 
     // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
-    modifier validConversionPath(IERC20Token[] _path) {
+    modifier validConversionPath(ITRC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
     }
@@ -106,7 +106,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if the signer is verified
     */
-    function verifyTrustedSender(IERC20Token[] _path, uint256 _amount, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
+    function verifyTrustedSender(ITRC20Token[] _path, uint256 _amount, uint256 _block, address _addr, uint8 _v, bytes32 _r, bytes32 _s) private returns(bool) {
         bytes32 hash = keccak256(_block, tx.gasprice, _addr, msg.sender, _amount, _path);
 
         // checking that it is the first conversion with the given signature
@@ -138,7 +138,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return tokens issued in return
     */
-    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
+    function convertFor(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256) {
         return convertForPrioritized2(_path, _amount, _minReturn, _for, 0x0, 0x0, 0x0, 0x0);
     }
 
@@ -157,14 +157,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return tokens issued in return
     */
-    function convertForPrioritized2(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
+    function convertForPrioritized2(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
         validConversionPath(_path)
         returns (uint256)
     {
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
-        IERC20Token fromToken = _path[0];
+        ITRC20Token fromToken = _path[0];
         require(msg.value == 0 || (_amount == msg.value && etherTokens[fromToken]));
 
         // if ETH was sent with the call, the source is an ether token - deposit the ETH in it
@@ -192,7 +192,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return amount of conversion result for each path
     */
-    function convertForMultiple(IERC20Token[] _paths, uint256[] _pathStartIndex, uint256[] _amounts, uint256[] _minReturns, address _for)
+    function convertForMultiple(ITRC20Token[] _paths, uint256[] _pathStartIndex, uint256[] _amounts, uint256[] _minReturns, address _for)
         public
         payable
         returns (uint256[])
@@ -206,7 +206,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             pathEndIndex = i == (_pathStartIndex.length - 1) ? _paths.length : _pathStartIndex[i + 1];
 
             // copy a single path from _paths into an array
-            IERC20Token[] memory path = new IERC20Token[](pathEndIndex - _pathStartIndex[i]);
+            ITRC20Token[] memory path = new ITRC20Token[](pathEndIndex - _pathStartIndex[i]);
             for (uint256 j = _pathStartIndex[i]; j < pathEndIndex; j += 1) {
                 path[j - _pathStartIndex[i]] = _paths[j];
             }
@@ -214,7 +214,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
             // if ETH is provided, ensure that the amount is lower than the path amount and
             // verify that the source token is an ether token. otherwise ensure that 
             // the source is not an ether token
-            IERC20Token fromToken = path[0];
+            ITRC20Token fromToken = path[0];
             require(msg.value == 0 || (_amounts[i] <= msg.value && etherTokens[fromToken]) || !etherTokens[fromToken]);
 
             // if ETH was sent with the call, the source is an ether token - deposit the ETH path amount in it.
@@ -249,7 +249,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @return tokens issued in return
     */
     function convertForInternal(
-        IERC20Token[] _path, 
+        ITRC20Token[] _path, 
         uint256 _amount, 
         uint256 _minReturn, 
         address _for, 
@@ -271,9 +271,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         }
 
         // if ETH is provided, ensure that the amount is identical to _amount and verify that the source token is an ether token
-        IERC20Token fromToken = _path[0];
+        ITRC20Token fromToken = _path[0];
 
-        IERC20Token toToken;
+        ITRC20Token toToken;
         
         (toToken, _amount) = convertByPath(_path, _amount, _minReturn, fromToken, _for);
 
@@ -294,20 +294,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _path        conversion path, see conversion path format above
         @param _amount      amount to convert from (in the initial source token)
         @param _minReturn   if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-        @param _fromToken   ERC20 token to convert from (the first element in the path)
+        @param _fromToken   TRC20 token to convert from (the first element in the path)
         @param _for         account that will receive the conversion result
 
-        @return ERC20 token to convert to (the last element in the path) & tokens issued in return
+        @return TRC20 token to convert to (the last element in the path) & tokens issued in return
     */
     function convertByPath(
-        IERC20Token[] _path,
+        ITRC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
-        IERC20Token _fromToken,
+        ITRC20Token _fromToken,
         address _for
-    ) private returns (IERC20Token, uint256) {
+    ) private returns (ITRC20Token, uint256) {
         ISmartToken smartToken;
-        IERC20Token toToken;
+        ITRC20Token toToken;
         IBancorConverter converter;
 
         // get the contract features address from the registry
@@ -342,10 +342,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return expected conversion return amount
     */
-    function getReturnByPath(IERC20Token[] _path, uint256 _amount) public view returns (uint256) {
-        IERC20Token fromToken;
+    function getReturnByPath(ITRC20Token[] _path, uint256 _amount) public view returns (uint256) {
+        ITRC20Token fromToken;
         ISmartToken smartToken; 
-        IERC20Token toToken;
+        ITRC20Token toToken;
         IBancorConverter converter;
         uint32 weight;
         uint256 amount;
@@ -438,11 +438,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return tokens issued in return
     */
-    function claimAndConvertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public returns (uint256) {
+    function claimAndConvertFor(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public returns (uint256) {
         // we need to transfer the tokens from the caller to the converter before we follow
         // the conversion path, to allow it to execute the conversion on behalf of the caller
         // note: we assume we already have allowance
-        IERC20Token fromToken = _path[0];
+        ITRC20Token fromToken = _path[0];
         assert(fromToken.transferFrom(msg.sender, this, _amount));
         return convertFor(_path, _amount, _minReturn, _for);
     }
@@ -458,7 +458,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return tokens issued in return
     */
-    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
+    function convert(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256) {
         return convertFor(_path, _amount, _minReturn, msg.sender);
     }
 
@@ -473,7 +473,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return tokens issued in return
     */
-    function claimAndConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function claimAndConvert(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return claimAndConvertFor(_path, _amount, _minReturn, msg.sender);
     }
 
@@ -484,7 +484,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
         @param _spender approved address
         @param _value   allowance amount
     */
-    function ensureAllowance(IERC20Token _token, address _spender, uint256 _value) private {
+    function ensureAllowance(ITRC20Token _token, address _spender, uint256 _value) private {
         // check if allowance for the given amount already exists
         if (_token.allowance(this, _spender) >= _value)
             return;
@@ -505,7 +505,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return connector's weight
     */
-    function getConnectorWeight(IBancorConverter _converter, IERC20Token _connector) 
+    function getConnectorWeight(IBancorConverter _converter, ITRC20Token _connector) 
         private
         view
         returns(uint32)
@@ -527,7 +527,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
         @return true if connector purchase enabled, otherwise - false
     */
-    function getConnectorPurchaseEnabled(IBancorConverter _converter, IERC20Token _connector) 
+    function getConnectorPurchaseEnabled(IBancorConverter _converter, ITRC20Token _connector) 
         private
         view
         returns(bool)
@@ -543,7 +543,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractIds, FeatureIds {
 
     // deprecated, backward compatibility
     function convertForPrioritized(
-        IERC20Token[] _path,
+        ITRC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         address _for,

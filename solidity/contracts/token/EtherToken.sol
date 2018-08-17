@@ -1,5 +1,5 @@
 pragma solidity ^0.4.23;
-import './ERC20Token.sol';
+import './TRC20Token.sol';
 import './interfaces/IEtherToken.sol';
 import '../utility/Owned.sol';
 import '../utility/TokenHolder.sol';
@@ -9,7 +9,7 @@ import '../utility/TokenHolder.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
+contract EtherToken is IEtherToken, Owned, TRC20Token, TokenHolder {
     // triggered when the total supply is increased
     event Issuance(uint256 _amount);
     // triggered when the total supply is decreased
@@ -20,7 +20,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
     */
     constructor()
         public
-        ERC20Token('Ether Token', 'ETH', 18) {
+        TRC20Token('Ether Token', 'ETH', 18) {
     }
 
     /**
@@ -61,7 +61,7 @@ contract EtherToken is IEtherToken, Owned, ERC20Token, TokenHolder {
         emit Destruction(_amount);
     }
 
-    // ERC20 standard method overrides with some extra protection
+    // TRC20 standard method overrides with some extra protection
 
     /**
         @dev send coins

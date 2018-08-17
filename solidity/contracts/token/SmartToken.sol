@@ -1,5 +1,5 @@
 pragma solidity ^0.4.23;
-import './ERC20Token.sol';
+import './TRC20Token.sol';
 import './interfaces/ISmartToken.sol';
 import '../utility/Owned.sol';
 import '../utility/TokenHolder.sol';
@@ -9,7 +9,7 @@ import '../utility/TokenHolder.sol';
 
     'Owned' is specified here for readability reasons
 */
-contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
+contract SmartToken is ISmartToken, Owned, TRC20Token, TokenHolder {
     string public version = '0.3';
 
     bool public transfersEnabled = true;    // true if transfer/transferFrom are enabled, false if not
@@ -30,7 +30,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
     */
     constructor(string _name, string _symbol, uint8 _decimals)
         public
-        ERC20Token(_name, _symbol, _decimals)
+        TRC20Token(_name, _symbol, _decimals)
     {
         emit NewSmartToken(address(this));
     }
@@ -88,7 +88,7 @@ contract SmartToken is ISmartToken, Owned, ERC20Token, TokenHolder {
         emit Destruction(_amount);
     }
 
-    // ERC20 standard method overrides with some extra functionality
+    // TRC20 standard method overrides with some extra functionality
 
     /**
         @dev send coins

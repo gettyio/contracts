@@ -11,7 +11,7 @@ const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TestTRC20Token = artifacts.require('TestTRC20Token.sol');
 const utils = require('./helpers/Utils');
 const ethUtil = require('ethereumjs-util');
 const web3Utils = require('web3-utils');
@@ -26,7 +26,7 @@ let smartToken1;
 let smartToken2;
 let smartToken3;
 let smartToken4;
-let erc20Token;
+let TRC20Token;
 let contractRegistry;
 let contractIds;
 let converter1;
@@ -38,7 +38,7 @@ let smartToken1QuickBuyPath;
 let smartToken2QuickBuyPath;
 let smartToken3QuickBuyPath;
 let smartToken4QuickBuyPath;
-let erc20QuickBuyPath;
+let TRC20QuickBuyPath;
 let smartToken1QuickSellPath;
 let smartToken2QuickSellPath;
 let defaultGasPriceLimit = 20000000000;
@@ -86,7 +86,7 @@ Token network structure:
           \          \
            \        SmartToken4
             \        /      \
-            EtherToken     ERC20Token
+            EtherToken     TRC20Token
 
 */
 
@@ -129,7 +129,7 @@ contract('BancorNetwork', accounts => {
         smartToken4 = await SmartToken.new('Token4', 'TKN4', 2);
         await smartToken4.issue(accounts[0], 2500000);
 
-        erc20Token = await TestERC20Token.new('ERC20Token', 'ERC5', 1000000);
+        TRC20Token = await TestTRC20Token.new('TRC20Token', 'ERC5', 1000000);
 
         converter1 = await BancorConverter.new(smartToken1.address, contractRegistry.address, 0, etherToken.address, 250000);
 
@@ -139,14 +139,14 @@ contract('BancorNetwork', accounts => {
         converter3 = await BancorConverter.new(smartToken3.address, contractRegistry.address, 0, smartToken4.address, 350000);
 
         converter4 = await BancorConverter.new(smartToken4.address, contractRegistry.address, 0, etherToken.address, 150000);
-        await converter4.addConnector(erc20Token.address, 220000, false);
+        await converter4.addConnector(TRC20Token.address, 220000, false);
 
         await etherToken.transfer(converter1.address, 50000);
         await smartToken1.transfer(converter2.address, 40000);
         await smartToken3.transfer(converter2.address, 25000);
         await smartToken4.transfer(converter3.address, 30000);
         await etherToken.transfer(converter4.address, 20000);
-        await erc20Token.transfer(converter4.address, 35000);
+        await TRC20Token.transfer(converter4.address, 35000);
 
         await smartToken1.transferOwnership(converter1.address);
         await converter1.acceptTokenOwnership();
@@ -164,7 +164,7 @@ contract('BancorNetwork', accounts => {
         smartToken2QuickBuyPath = [etherToken.address, smartToken1.address, smartToken1.address, smartToken2.address, smartToken2.address];
         smartToken3QuickBuyPath = [etherToken.address, smartToken4.address, smartToken4.address, smartToken3.address, smartToken4.address];
         smartToken4QuickBuyPath = [etherToken.address, smartToken4.address, smartToken4.address];
-        erc20QuickBuyPath = [etherToken.address, smartToken4.address, erc20Token.address];
+        TRC20QuickBuyPath = [etherToken.address, smartToken4.address, TRC20Token.address];
 
         await converter1.setQuickBuyPath(smartToken1QuickBuyPath);
         await converter2.setQuickBuyPath(smartToken2QuickBuyPath);
@@ -296,12 +296,12 @@ contract('BancorNetwork', accounts => {
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });
 
-    it('verifies that quick buy of an ERC20 token through the fallback function results in increased balance for the buyer', async () => {
-        await converter4.setQuickBuyPath(erc20QuickBuyPath);
-        let prevBalance = await erc20Token.balanceOf.call(accounts[0]);
+    it('verifies that quick buy of an TRC20 token through the fallback function results in increased balance for the buyer', async () => {
+        await converter4.setQuickBuyPath(TRC20QuickBuyPath);
+        let prevBalance = await TRC20Token.balanceOf.call(accounts[0]);
 
         await converter4.send(100);
-        let newBalance = await erc20Token.balanceOf.call(accounts[0]);
+        let newBalance = await TRC20Token.balanceOf.call(accounts[0]);
 
         assert.isAbove(newBalance.toNumber(), prevBalance.toNumber(), "new balance isn't higher than previous balance");
     });

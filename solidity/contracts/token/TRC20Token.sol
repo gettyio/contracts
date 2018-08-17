@@ -1,11 +1,11 @@
 pragma solidity ^0.4.23;
-import './interfaces/IERC20Token.sol';
+import './interfaces/ITRC20Token.sol';
 import '../utility/Utils.sol';
 
 /**
-    ERC20 Standard Token implementation
+    TRC20 Standard Token implementation
 */
-contract ERC20Token is IERC20Token, Utils {
+contract TRC20Token is ITRC20Token, Utils {
     string public standard = 'Token 0.1';
     string public name = '';
     string public symbol = '';

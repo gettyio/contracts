@@ -15,9 +15,9 @@ import '../token/interfaces/IEtherToken.sol';
 /*
     Bancor Converter v0.10
 
-    The Bancor version of the token converter, allows conversion between a smart token and other ERC20 tokens and between different ERC20 tokens and themselves.
+    The Bancor version of the token converter, allows conversion between a smart token and other TRC20 tokens and between different TRC20 tokens and themselves.
 
-    ERC20 connector balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
+    TRC20 connector balance can be virtual, meaning that the calculations are based on the virtual balance instead of relying on
     the actual connector balance. This is a security mechanism that prevents the need to keep a very large (and valuable) balance in a single contract.
 
     The converter is upgradable (just like any SmartTokenController).
@@ -50,15 +50,15 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     IContractRegistry public registry;                  // contract registry contract
     IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public connectorTokens;               // ERC20 standard token addresses
-    IERC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
+    ITRC20Token[] public connectorTokens;               // TRC20 standard token addresses
+    ITRC20Token[] public quickBuyPath;                  // conversion path that's used in order to buy the token with ETH
     mapping (address => Connector) public connectors;   // connector token addresses -> connector data
     uint32 private totalConnectorWeight = 0;            // used to efficiently prevent increasing the total connector weight above 100%
     uint32 public maxConversionFee = 0;                 // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public conversionFee = 0;                    // current conversion fee, represented in ppm, 0...maxConversionFee
     bool public conversionsEnabled = true;              // true if token conversions is enabled, false if not
-    IERC20Token[] private convertPath;
+    ITRC20Token[] private convertPath;
 
     // triggered when a conversion between two tokens occurs
     event Conversion(
@@ -92,7 +92,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         ISmartToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee,
-        IERC20Token _connectorToken,
+        ITRC20Token _connectorToken,
         uint32 _connectorWeight
     )
         public
@@ -114,13 +114,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     // validates a connector token address - verifies that the address belongs to one of the connector tokens
-    modifier validConnector(IERC20Token _address) {
+    modifier validConnector(ITRC20Token _address) {
         require(connectors[_address].isSet);
         _;
     }
 
     // validates a token address - verifies that the address belongs to one of the convertible tokens
-    modifier validToken(IERC20Token _address) {
+    modifier validToken(ITRC20Token _address) {
         require(_address == token || connectors[_address].isSet);
         _;
     }
@@ -144,7 +144,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     // validates a conversion path - verifies that the number of elements is odd and that maximum number of 'hops' is 10
-    modifier validConversionPath(IERC20Token[] _path) {
+    modifier validConversionPath(ITRC20Token[] _path) {
         require(_path.length > 2 && _path.length <= (1 + 2 * 10) && _path.length % 2 == 1);
         _;
     }
@@ -205,7 +205,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @param _path    new quick buy path, see conversion path format in the bancorNetwork contract
     */
-    function setQuickBuyPath(IERC20Token[] _path)
+    function setQuickBuyPath(ITRC20Token[] _path)
         public
         ownerOnly
         validConversionPath(_path)
@@ -275,7 +275,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _weight                 constant connector weight, represented in ppm, 1-1000000
         @param _enableVirtualBalance   true to enable virtual balance for the connector, false to disable it
     */
-    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance)
+    function addConnector(ITRC20Token _token, uint32 _weight, bool _enableVirtualBalance)
         public
         ownerOnly
         inactive
@@ -303,7 +303,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _enableVirtualBalance   true to enable virtual balance for the connector, false to disable it
         @param _virtualBalance         new connector's virtual balance
     */
-    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)
+    function updateConnector(ITRC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance)
         public
         ownerOnly
         validConnector(_connectorToken)
@@ -326,7 +326,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
         @param _connectorToken  connector token contract address
         @param _disable         true to disable the token, false to re-enable it
     */
-    function disableConnectorPurchases(IERC20Token _connectorToken, bool _disable)
+    function disableConnectorPurchases(ITRC20Token _connectorToken, bool _disable)
         public
         ownerOnly
         validConnector(_connectorToken)
@@ -341,7 +341,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return connector balance
     */
-    function getConnectorBalance(IERC20Token _connectorToken)
+    function getConnectorBalance(ITRC20Token _connectorToken)
         public
         view
         validConnector(_connectorToken)
@@ -354,13 +354,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev returns the expected return for converting a specific amount of _fromToken to _toToken
 
-        @param _fromToken  ERC20 token to convert from
-        @param _toToken    ERC20 token to convert to
+        @param _fromToken  TRC20 token to convert from
+        @param _toToken    TRC20 token to convert to
         @param _amount     amount to convert, in fromToken
 
         @return expected conversion return amount
     */
-    function getReturn(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount) public view returns (uint256) {
+    function getReturn(ITRC20Token _fromToken, ITRC20Token _toToken, uint256 _amount) public view returns (uint256) {
         require(_fromToken != _toToken); // validate input
 
         // conversion between the token and one of its connectors
@@ -381,7 +381,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return expected purchase return amount
     */
-    function getPurchaseReturn(IERC20Token _connectorToken, uint256 _depositAmount)
+    function getPurchaseReturn(ITRC20Token _connectorToken, uint256 _depositAmount)
         public
         view
         active
@@ -408,7 +408,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return expected sale return amount
     */
-    function getSaleReturn(IERC20Token _connectorToken, uint256 _sellAmount)
+    function getSaleReturn(ITRC20Token _connectorToken, uint256 _sellAmount)
         public
         view
         active
@@ -434,7 +434,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return expected sale return amount (in the to connector token)
     */
-    function getCrossConnectorReturn(IERC20Token _fromConnectorToken, IERC20Token _toConnectorToken, uint256 _sellAmount)
+    function getCrossConnectorReturn(ITRC20Token _fromConnectorToken, ITRC20Token _toConnectorToken, uint256 _sellAmount)
         public
         view
         active
@@ -460,14 +460,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev converts a specific amount of _fromToken to _toToken
 
-        @param _fromToken  ERC20 token to convert from
-        @param _toToken    ERC20 token to convert to
+        @param _fromToken  TRC20 token to convert from
+        @param _toToken    TRC20 token to convert to
         @param _amount     amount to convert, in fromToken
         @param _minReturn  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return conversion return amount
     */
-    function convertInternal(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn)
+    function convertInternal(ITRC20Token _fromToken, ITRC20Token _toToken, uint256 _amount, uint256 _minReturn)
         public
         bancorNetworkOnly
         conversionsAllowed
@@ -521,14 +521,14 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     /**
         @dev converts a specific amount of _fromToken to _toToken
 
-        @param _fromToken  ERC20 token to convert from
-        @param _toToken    ERC20 token to convert to
+        @param _fromToken  TRC20 token to convert from
+        @param _toToken    TRC20 token to convert to
         @param _amount     amount to convert, in fromToken
         @param _minReturn  if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
 
         @return conversion return amount
     */
-    function convert(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function convert(ITRC20Token _fromToken, ITRC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         convertPath = [_fromToken, token, _toToken];
         return quickConvert(convertPath, _amount, _minReturn);
     }
@@ -542,7 +542,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return buy return amount
     */
-    function buy(IERC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
+    function buy(ITRC20Token _connectorToken, uint256 _depositAmount, uint256 _minReturn) internal returns (uint256) {
         uint256 amount = getPurchaseReturn(_connectorToken, _depositAmount);
         // ensure the trade gives something in return and meets the minimum requested amount
         require(amount != 0 && amount >= _minReturn);
@@ -575,7 +575,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return sell return amount
     */
-    function sell(IERC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn) internal returns (uint256) {
+    function sell(ITRC20Token _connectorToken, uint256 _sellAmount, uint256 _minReturn) internal returns (uint256) {
         require(_sellAmount <= token.balanceOf(msg.sender)); // validate input
 
         uint256 amount = getSaleReturn(_connectorToken, _sellAmount);
@@ -609,7 +609,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
         @dev converts the token to any other token in the bancor network by following a predefined conversion path
-        note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+        note that when converting from an TRC20 token (as opposed to a smart token), allowance must be set beforehand
 
         @param _path        conversion path, see conversion path format in the BancorNetwork contract
         @param _amount      amount to convert from (in the initial source token)
@@ -617,7 +617,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return tokens issued in return
     */
-    function quickConvert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn)
+    function quickConvert(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn)
         public
         payable
         validConversionPath(_path)
@@ -628,7 +628,7 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
     /**
         @dev converts the token to any other token in the bancor network by following a predefined conversion path
-        note that when converting from an ERC20 token (as opposed to a smart token), allowance must be set beforehand
+        note that when converting from an TRC20 token (as opposed to a smart token), allowance must be set beforehand
 
         @param _path        conversion path, see conversion path format in the BancorNetwork contract
         @param _amount      amount to convert from (in the initial source token)
@@ -640,13 +640,13 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
 
         @return tokens issued in return
     */
-    function quickConvertPrioritized(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
+    function quickConvertPrioritized(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn, uint256 _block, uint8 _v, bytes32 _r, bytes32 _s)
         public
         payable
         validConversionPath(_path)
         returns (uint256)
     {
-        IERC20Token fromToken = _path[0];
+        ITRC20Token fromToken = _path[0];
         IBancorNetwork bancorNetwork = IBancorNetwork(registry.addressOf(ContractIds.BANCOR_NETWORK));
 
         // we need to transfer the source tokens from the caller to the BancorNetwork contract,
@@ -669,19 +669,19 @@ contract BancorConverter is IBancorConverter, SmartTokenController, Managed, Con
     }
 
     // deprecated, backward compatibility
-    function change(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
+    function change(ITRC20Token _fromToken, ITRC20Token _toToken, uint256 _amount, uint256 _minReturn) public returns (uint256) {
         return convertInternal(_fromToken, _toToken, _amount, _minReturn);
     }
 
     /**
         @dev helper, dispatches the Conversion event
 
-        @param _fromToken       ERC20 token to convert from
-        @param _toToken         ERC20 token to convert to
+        @param _fromToken       TRC20 token to convert from
+        @param _toToken         TRC20 token to convert to
         @param _amount          amount purchased/sold (in the source token)
         @param _returnAmount    amount returned (in the target token)
     */
-    function dispatchConversionEvent(IERC20Token _fromToken, IERC20Token _toToken, uint256 _amount, uint256 _returnAmount, uint256 _feeAmount) private {
+    function dispatchConversionEvent(ITRC20Token _fromToken, ITRC20Token _toToken, uint256 _amount, uint256 _returnAmount, uint256 _feeAmount) private {
         // fee amount is converted to 255 bits -
         // negative amount means the fee is taken from the source token, positive amount means its taken from the target token
         // currently the fee is always taken from the target token

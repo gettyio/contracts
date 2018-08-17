@@ -5,7 +5,7 @@ const Utils = artifacts.require('Utils.sol');
 const Owned = artifacts.require('Owned.sol');
 const Managed = artifacts.require('Managed.sol');
 const TokenHolder = artifacts.require('TokenHolder.sol');
-const ERC20Token = artifacts.require('ERC20Token.sol');
+const TRC20Token = artifacts.require('TRC20Token.sol');
 const EtherToken = artifacts.require('EtherToken.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
@@ -25,7 +25,7 @@ module.exports = async deployer => {
     deployer.deploy(Owned);
     deployer.deploy(Managed);
     deployer.deploy(TokenHolder);
-    deployer.deploy(ERC20Token, 'DummyToken', 'DUM', 0);
+    deployer.deploy(TRC20Token, 'DummyToken', 'DUM', 0);
     deployer.deploy(EtherToken);
     await deployer.deploy(ContractRegistry);
     deployer.deploy(ContractFeatures);

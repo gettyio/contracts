@@ -2,7 +2,7 @@ pragma solidity ^0.4.23;
 import './Owned.sol';
 import './Utils.sol';
 import './interfaces/ITokenHolder.sol';
-import '../token/interfaces/IERC20Token.sol';
+import '../token/interfaces/ITRC20Token.sol';
 
 /*
     We consider every contract to be a 'token holder' since it's currently not possible
@@ -22,11 +22,11 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         @dev withdraws tokens held by the contract and sends them to an account
         can only be called by the owner
 
-        @param _token   ERC20 token contract address
+        @param _token   TRC20 token contract address
         @param _to      account to receive the new amount
         @param _amount  amount to withdraw
     */
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount)
+    function withdrawTokens(ITRC20Token _token, address _to, uint256 _amount)
         public
         ownerOnly
         validAddress(_token)

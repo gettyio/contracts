@@ -9,7 +9,7 @@ const BancorFormula = artifacts.require('BancorFormula.sol');
 const BancorGasPriceLimit = artifacts.require('BancorGasPriceLimit.sol');
 const ContractRegistry = artifacts.require('ContractRegistry.sol');
 const ContractFeatures = artifacts.require('ContractFeatures.sol');
-const TestERC20Token = artifacts.require('TestERC20Token.sol');
+const TestTRC20Token = artifacts.require('TestTRC20Token.sol');
 const utils = require('./helpers/Utils');
 
 const weight10Percent = 100000;
@@ -31,10 +31,10 @@ async function initConverter(accounts, activate, maxConversionFee = 0) {
     token = await SmartToken.new('Token1', 'TKN1', 2);
     tokenAddress = token.address;
 
-    connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+    connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
     connectorTokenAddress = connectorToken.address;
 
-    connectorToken2 = await TestERC20Token.new('ERC Token 2', 'ERC2', 200000);
+    connectorToken2 = await TestTRC20Token.new('ERC Token 2', 'ERC2', 200000);
     connectorTokenAddress2 = connectorToken2.address;
 
     let converter = await BancorConverter.new(
@@ -95,7 +95,7 @@ contract('BancorConverter', accounts => {
 
         let token = await SmartToken.new('Token1', 'TKN1', 2);
         
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
         tokenAddress = token.address;
         connectorTokenAddress = connectorToken.address;
     });
@@ -644,7 +644,7 @@ contract('BancorConverter', accounts => {
 
     it('verifies that the correct connector balance is returned regardless of whether virtual balance is set or not', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
         let connectorBalance;
         connectorBalance = await converter.getConnectorBalance.call(connectorToken.address);
@@ -675,7 +675,7 @@ contract('BancorConverter', accounts => {
 
     it('verifies that the owner can withdraw from the connector', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
         await connectorToken.transfer(converter.address, 1000);
         let converterBalance = await connectorToken.balanceOf(converter.address);
@@ -689,7 +689,7 @@ contract('BancorConverter', accounts => {
 
     it('should throw when a non owner attempts to withdraw from the connector', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
         await connectorToken.transfer(converter.address, 1000);
 
@@ -704,7 +704,7 @@ contract('BancorConverter', accounts => {
 
     it('should throw when attempting to withdraw from a connector to an invalid address', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
         await connectorToken.transfer(converter.address, 1000);
 
@@ -719,7 +719,7 @@ contract('BancorConverter', accounts => {
 
     it('should throw when attempting to withdraw from a connector to the converter address', async () => {
         let converter = await BancorConverter.new(tokenAddress, contractRegistry.address, 0, '0x0', 0);
-        let connectorToken = await TestERC20Token.new('ERC Token 1', 'ERC1', 100000);
+        let connectorToken = await TestTRC20Token.new('ERC Token 1', 'ERC1', 100000);
         await converter.addConnector(connectorToken.address, weight10Percent, false);
         await connectorToken.transfer(converter.address, 1000);
 

@@ -1,9 +1,9 @@
 pragma solidity ^0.4.23;
 
 /*
-    ERC20 Standard Token interface
+    TRC20 Standard Token interface
 */
-contract IERC20Token {
+contract ITRC20Token {
     // these functions aren't abstract since the compiler emits automatically generated getter functions as external
     function name() public view returns (string) {}
     function symbol() public view returns (string) {}

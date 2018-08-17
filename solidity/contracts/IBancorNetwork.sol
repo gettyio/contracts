@@ -1,14 +1,14 @@
 pragma solidity ^0.4.23;
-import './token/interfaces/IERC20Token.sol';
+import './token/interfaces/ITRC20Token.sol';
 
 /*
     Bancor Network interface
 */
 contract IBancorNetwork {
-    function convert(IERC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256);
-    function convertFor(IERC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256);
+    function convert(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn) public payable returns (uint256);
+    function convertFor(ITRC20Token[] _path, uint256 _amount, uint256 _minReturn, address _for) public payable returns (uint256);
     function convertForPrioritized2(
-        IERC20Token[] _path,
+        ITRC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         address _for,
@@ -20,7 +20,7 @@ contract IBancorNetwork {
 
     // deprecated, backward compatibility
     function convertForPrioritized(
-        IERC20Token[] _path,
+        ITRC20Token[] _path,
         uint256 _amount,
         uint256 _minReturn,
         address _for,

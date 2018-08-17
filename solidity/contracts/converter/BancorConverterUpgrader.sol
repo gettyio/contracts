@@ -13,26 +13,26 @@ import '../FeatureIds.sol';
 */
 contract IBancorConverterExtended is IBancorConverter, IOwned {
     function token() public view returns (ISmartToken) {}
-    function quickBuyPath(uint256 _index) public view returns (IERC20Token) { _index; }
+    function quickBuyPath(uint256 _index) public view returns (ITRC20Token) { _index; }
     function maxConversionFee() public view returns (uint32) {}
     function conversionFee() public view returns (uint32) {}
     function connectorTokenCount() public view returns (uint16);
     function reserveTokenCount() public view returns (uint16);
-    function connectorTokens(uint256 _index) public view returns (IERC20Token) { _index; }
-    function reserveTokens(uint256 _index) public view returns (IERC20Token) { _index; }
+    function connectorTokens(uint256 _index) public view returns (ITRC20Token) { _index; }
+    function reserveTokens(uint256 _index) public view returns (ITRC20Token) { _index; }
     function setConversionWhitelist(IWhitelist _whitelist) public;
     function getQuickBuyPathLength() public view returns (uint256);
     function transferTokenOwnership(address _newOwner) public;
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) public;
+    function withdrawTokens(ITRC20Token _token, address _to, uint256 _amount) public;
     function acceptTokenOwnership() public;
     function transferManagement(address _newManager) public;
     function acceptManagement() public;
     function setConversionFee(uint32 _conversionFee) public;
-    function setQuickBuyPath(IERC20Token[] _path) public;
-    function addConnector(IERC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
-    function updateConnector(IERC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
-    function getConnectorBalance(IERC20Token _connectorToken) public view returns (uint256);
-    function getReserveBalance(IERC20Token _reserveToken) public view returns (uint256);
+    function setQuickBuyPath(ITRC20Token[] _path) public;
+    function addConnector(ITRC20Token _token, uint32 _weight, bool _enableVirtualBalance) public;
+    function updateConnector(ITRC20Token _connectorToken, uint32 _weight, bool _enableVirtualBalance, uint256 _virtualBalance) public;
+    function getConnectorBalance(ITRC20Token _connectorToken) public view returns (uint256);
+    function getReserveBalance(ITRC20Token _reserveToken) public view returns (uint256);
     function reserves(address _address) public view returns (
         uint256 virtualBalance, 
         uint32 weight, 
@@ -144,7 +144,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
             token,
             registry,
             maxConversionFee,
-            IERC20Token(address(0)),
+            ITRC20Token(address(0)),
             0
         );
 
@@ -190,7 +190,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
                 _isLegacyVersion
             );
 
-            IERC20Token connectorToken = IERC20Token(connectorAddress);
+            ITRC20Token connectorToken = ITRC20Token(connectorAddress);
             _newConverter.addConnector(connectorToken, weight, isVirtualBalanceEnabled);
 
             if (isVirtualBalanceEnabled)
@@ -220,7 +220,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
         if (quickBuyPathLength <= 0)
             return;
 
-        IERC20Token[] memory path = new IERC20Token[](quickBuyPathLength);
+        ITRC20Token[] memory path = new ITRC20Token[](quickBuyPathLength);
         for (uint256 i = 0; i < quickBuyPathLength; i++) {
             path[i] = _oldConverter.quickBuyPath(i);
         }
@@ -245,7 +245,7 @@ contract BancorConverterUpgrader is Owned, ContractIds, FeatureIds {
 
         for (uint16 i = 0; i < connectorTokenCount; i++) {
             address connectorAddress = _isLegacyVersion ? _oldConverter.reserveTokens(i) : _oldConverter.connectorTokens(i);
-            IERC20Token connector = IERC20Token(connectorAddress);
+            ITRC20Token connector = ITRC20Token(connectorAddress);
             connectorBalance = connector.balanceOf(_oldConverter);
             _oldConverter.withdrawTokens(connector, address(_newConverter), connectorBalance);
         }

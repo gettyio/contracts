@@ -32,7 +32,7 @@ contract BancorConverterFactory is IBancorConverterFactory {
         ISmartToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee,
-        IERC20Token _connectorToken,
+        ITRC20Token _connectorToken,
         uint32 _connectorWeight
     ) public returns(address converterAddress) {
         BancorConverter converter = new BancorConverter(
